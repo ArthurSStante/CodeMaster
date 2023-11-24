@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// schema.prisma
+
+
+// Definindo o modelo do usuário
+model User {
+  id            Int      @id @default(autoincrement())
+  nome          String
+  senha         String
+  email         String   @unique
+  data_cadastro DateTime @default(now())
+  ultimo_acesso DateTime?
+  telefone      String?
+
+  // Relacionamento com os produtos cadastrados pelo usuário
+  produtos      Product[]
+  distribuidoras Distributor[]
+  orcamentos    Orcamento[]
+}
+
+// Definindo o modelo do produto
+model Product {
+  id                Int      @id @default(autoincrement())
+  nome              String
+  data_chegada      DateTime @default(now())
+  data_validade     DateTime
+  quantidade_atual  Int
+  quantidade_minima Int
+  quantidade_adicionada Int
+  descricao         String?
+  distribuidoraId   Int      // Renomeando para seguir a convenção
+  distribuidora     Distributor @relation(fields: [distribuidoraId], references: [id])
+  categoria         String
+
+  // Relacionamento com o usuário que cadastrou o produto
+  userId            Int
+  user              User     @relation(fields: [userId], references: [id])
+
+  // Relacionamento com os orçamentos que incluem o produto
+  orcamentos        Orcamento[]
+}
+
+// Definindo o modelo da distribuidora
+model Distributor {
+  id                Int      @id @default(autoincrement())
+  nome_distribuidora String
+  razao_social      String
+  telefone          String
+
+  // Adicione um campo para armazenar o userId do usuário que criou a distribuidora
+  userId            Int
+  user              User     @relation(fields: [userId], references: [id])
+
+  // Relacionamento com os produtos fornecidos pela distribuidora
+  products          Product[]
+  orcamento         Orcamento[]
+}
+
+// Definindo o modelo do orçamento
+model Orcamento {
+  id               Int      @id @default(autoincrement())
+  descricao         String?
+  valor            Float
+  data_criacao     DateTime @default(now())
+
+   // Adicione um campo para armazenar o id da distribuidora
+  distribuidoraId  Int
+  distribuidora    Distributor @relation(fields: [distribuidoraId], references: [id])
+
+  // Relacionamento com o usuário que criou o orçamento
+  userId           Int
+  user             User     @relation(fields: [userId], references: [id])
+
+  // Relacionamento com os produtos incluídos no orçamento
+  products         Product[]
+}
